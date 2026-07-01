@@ -147,17 +147,22 @@ export default function ExpenseForm({
 
       <div>
         <label className={labelClass}>付款人</label>
-        <select
-          className={inputClass}
-          value={paidBy}
-          onChange={(e) => setPaidBy(e.target.value)}
-        >
+        <div className="flex flex-wrap gap-2">
           {members.map((m) => (
-            <option key={m.id} value={m.id}>
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => setPaidBy(m.id)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                paidBy === m.id
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-600'
+              }`}
+            >
               {m.name}
-            </option>
+            </button>
           ))}
-        </select>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-2">
