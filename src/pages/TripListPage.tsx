@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTripStore } from '../store/useTripStore'
 import TripCard from '../components/TripCard'
 
@@ -15,6 +16,7 @@ const EMPTY_FORM: NewTripForm = {
 }
 
 export default function TripListPage() {
+  const navigate = useNavigate()
   const { trips, addTrip, deleteTrip } = useTripStore()
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState<NewTripForm>(EMPTY_FORM)
@@ -36,7 +38,7 @@ export default function TripListPage() {
       <header className="bg-white shadow-sm px-4 py-3 flex items-center justify-between">
         <h1 className="text-xl font-bold">旅遊記帳</h1>
         <div className="flex items-center gap-2">
-          <a href="/settings" className="text-gray-500 text-sm px-2 py-1">設定</a>
+          <button onClick={() => navigate('/settings')} className="text-gray-500 text-sm px-2 py-1">設定</button>
           <button
             onClick={() => setShowModal(true)}
             className="bg-blue-600 text-white text-sm px-3 py-1 rounded-lg"

@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { Trip } from '../types'
 import { exportJSON, exportCSV } from '../utils/export'
 
@@ -7,6 +8,7 @@ interface TripCardProps {
 }
 
 export default function TripCard({ trip, onDelete }: TripCardProps) {
+  const navigate = useNavigate()
   const totalBase = trip.expenses.reduce(
     (sum, e) => sum + e.amount * e.exchangeRate,
     0
@@ -31,12 +33,12 @@ export default function TripCard({ trip, onDelete }: TripCardProps) {
           </p>
         </div>
         <div className="flex flex-col gap-1 items-end">
-          <a
-            href={`/trips/${trip.id}`}
+          <button
+            onClick={() => navigate(`/trips/${trip.id}`)}
             className="text-blue-600 text-sm font-medium"
           >
             詳情
-          </a>
+          </button>
           <button
             onClick={() => exportJSON(trip)}
             className="text-xs text-gray-500"
