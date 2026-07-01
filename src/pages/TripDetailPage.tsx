@@ -4,14 +4,15 @@ import { useTripStore } from '../store/useTripStore'
 import ExpenseList from '../components/ExpenseList'
 import ExpenseForm from '../components/ExpenseForm'
 import SettlementView from '../components/SettlementView'
-import { Expense } from '../types'
+import TripSettingsPanel from '../components/TripSettingsPanel'
+import { Expense, Trip } from '../types'
 
-type Tab = 'list' | 'add' | 'settlement'
+type Tab = 'list' | 'add' | 'settlement' | 'settings'
 
 export default function TripDetailPage() {
   const { tripId } = useParams<{ tripId: string }>()
   const navigate = useNavigate()
-  const { trips, addExpense, updateExpense, deleteExpense } = useTripStore()
+  const { trips, addExpense, updateExpense, deleteExpense, updateTrip } = useTripStore()
   const [activeTab, setActiveTab] = useState<Tab>('list')
   const [editingExpense, setEditingExpense] = useState<Expense | undefined>()
 
@@ -53,10 +54,16 @@ export default function TripDetailPage() {
     setActiveTab('list')
   }
 
+  function handleSaveSettings(updates: Partial<Pick<Trip, 'name' | 'baseCurrency' | 'members' | 'defaultRates'>>) {
+    updateTrip(trip!.id, updates)
+    setActiveTab('list')
+  }
+
   const tabs: { key: Tab; label: string }[] = [
     { key: 'list', label: '支出列表' },
     { key: 'add', label: editingExpense ? '編輯支出' : '新增支出' },
     { key: 'settlement', label: '結算' },
+    { key: 'settings', label: '旅行設定' },
   ]
 
   return (
@@ -76,7 +83,7 @@ export default function TripDetailPage() {
       </header>
 
       {/* Tabs */}
-      <nav className="bg-white border-b flex">
+      <nav className="bg-white border-b flex overflow-x-auto">
         {tabs.map(({ key, label }) => (
           <button
             key={key}
@@ -84,7 +91,7 @@ export default function TripDetailPage() {
               if (key !== 'add') setEditingExpense(undefined)
               setActiveTab(key)
             }}
-            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${
+            className={`flex-1 min-w-fit py-3 px-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === key
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-gray-500'
@@ -110,12 +117,16 @@ export default function TripDetailPage() {
           <ExpenseForm
             members={trip.members}
             existingExpenses={trip.expenses}
+            defaultRates={trip.defaultRates ?? {}}
             initialValues={editingExpense}
             onSubmit={editingExpense ? handleUpdateExpense : handleAddExpense}
             onCancel={handleCancelForm}
           />
         )}
         {activeTab === 'settlement' && <SettlementView trip={trip} />}
+        {activeTab === 'settings' && (
+          <TripSettingsPanel trip={trip} onSave={handleSaveSettings} />
+        )}
       </main>
     </div>
   )

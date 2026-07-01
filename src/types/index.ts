@@ -24,10 +24,11 @@ export interface Expense {
 export interface Trip {
   id: string
   name: string
-  baseCurrency: string   // e.g. "TWD"
+  baseCurrency: string            // e.g. "TWD"
   members: Member[]
   expenses: Expense[]
-  createdAt: string      // ISO date string
+  createdAt: string               // ISO date string
+  defaultRates?: Record<string, number> // currency → default exchange rate
 }
 
 export interface Transfer {

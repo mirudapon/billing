@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import { Expense, Member, Split } from '../types'
-import { getLastExchangeRate, convertToBase } from '../utils/currency'
+import { getAutoFillRate, convertToBase } from '../utils/currency'
 import { useTripStore } from '../store/useTripStore'
 import SplitEditor from './SplitEditor'
 
 interface ExpenseFormProps {
   members: Member[]
   existingExpenses: Expense[]
+  defaultRates: Record<string, number>
   initialValues?: Expense
   onSubmit: (expense: Omit<Expense, 'id'>) => void
   onCancel: () => void
@@ -20,6 +21,7 @@ function defaultSplits(members: Member[]): Split[] {
 export default function ExpenseForm({
   members,
   existingExpenses,
+  defaultRates,
   initialValues,
   onSubmit,
   onCancel,
@@ -51,15 +53,16 @@ export default function ExpenseForm({
   )
 
   // Auto-fill exchange rate when currency changes
+  // Priority: defaultRates[currency] → last expense rate → '1' if same as base
   useEffect(() => {
     if (initialValues) return
-    const last = getLastExchangeRate(existingExpenses, currency)
-    if (last !== undefined) {
-      setExchangeRate(String(last))
+    const rate = getAutoFillRate(defaultRates, existingExpenses, currency)
+    if (rate !== undefined) {
+      setExchangeRate(String(rate))
     } else {
       setExchangeRate(currency === 'TWD' ? '1' : '')
     }
-  }, [currency, existingExpenses, initialValues])
+  }, [currency, defaultRates, existingExpenses, initialValues])
 
   const parsedAmount = parseFloat(amount) || 0
   const parsedRate = parseFloat(exchangeRate) || 0

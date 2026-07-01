@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { convertToBase, getLastExchangeRate } from './currency'
+import { convertToBase, getLastExchangeRate, getAutoFillRate } from './currency'
 import { Expense } from '../types'
 
 const makeExpense = (overrides: Partial<Expense> = {}): Expense => ({
@@ -60,5 +60,29 @@ describe('getLastExchangeRate', () => {
       makeExpense({ currency: 'USD', exchangeRate: 31 }),
     ]
     expect(getLastExchangeRate(expenses, 'JPY')).toBeUndefined()
+  })
+})
+
+describe('getAutoFillRate', () => {
+  it('returns defaultRates value when present', () => {
+    const expenses = [makeExpense({ currency: 'JPY', exchangeRate: 0.20 })]
+    expect(getAutoFillRate({ JPY: 0.22 }, expenses, 'JPY')).toBe(0.22)
+  })
+
+  it('falls back to last expense rate when no defaultRate', () => {
+    const expenses = [makeExpense({ currency: 'JPY', exchangeRate: 0.20 })]
+    expect(getAutoFillRate({}, expenses, 'JPY')).toBe(0.20)
+  })
+
+  it('returns undefined when no defaultRate and no matching expense', () => {
+    expect(getAutoFillRate({}, [], 'JPY')).toBeUndefined()
+  })
+
+  it('defaultRate takes priority over last expense rate', () => {
+    const expenses = [
+      makeExpense({ currency: 'JPY', exchangeRate: 0.20 }),
+      makeExpense({ currency: 'JPY', exchangeRate: 0.21 }),
+    ]
+    expect(getAutoFillRate({ JPY: 0.22 }, expenses, 'JPY')).toBe(0.22)
   })
 })

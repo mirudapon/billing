@@ -12,6 +12,7 @@ interface TripStore {
   trips: Trip[]
   settings: AppSettings
   addTrip: (trip: Omit<Trip, 'id' | 'createdAt' | 'expenses'>) => void
+  updateTrip: (tripId: string, updates: Partial<Pick<Trip, 'name' | 'baseCurrency' | 'members' | 'defaultRates'>>) => void
   deleteTrip: (tripId: string) => void
   addExpense: (tripId: string, expense: Omit<Expense, 'id'>) => void
   updateExpense: (tripId: string, expense: Expense) => void
@@ -40,8 +41,16 @@ export const useTripStore = create<TripStore>()(
               id: crypto.randomUUID(),
               createdAt: new Date().toISOString(),
               expenses: [],
+              defaultRates: tripData.defaultRates ?? {},
             },
           ],
+        })),
+
+      updateTrip: (tripId, updates) =>
+        set((state) => ({
+          trips: state.trips.map((trip) =>
+            trip.id === tripId ? { ...trip, ...updates } : trip
+          ),
         })),
 
       deleteTrip: (tripId) =>
@@ -126,6 +135,17 @@ export const useTripStore = create<TripStore>()(
     }),
     {
       name: 'travel-expense-store',
+      version: 1,
+      migrate: (persisted: unknown, version: number) => {
+        const state = persisted as { trips?: Trip[] }
+        if (version < 1 && state.trips) {
+          state.trips = state.trips.map((t) => ({
+            ...t,
+            defaultRates: t.defaultRates ?? {},
+          }))
+        }
+        return state
+      },
     }
   )
 )

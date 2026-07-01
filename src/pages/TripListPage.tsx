@@ -26,7 +26,7 @@ export default function TripListPage() {
       .map((n) => n.trim())
       .filter(Boolean)
       .map((name) => ({ id: crypto.randomUUID(), name }))
-    addTrip({ name: form.name, baseCurrency: form.baseCurrency, members })
+    addTrip({ name: form.name, baseCurrency: form.baseCurrency, members, defaultRates: {} })
     setForm(EMPTY_FORM)
     setShowModal(false)
   }
