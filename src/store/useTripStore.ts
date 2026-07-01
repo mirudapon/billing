@@ -135,14 +135,19 @@ export const useTripStore = create<TripStore>()(
     }),
     {
       name: 'travel-expense-store',
-      version: 1,
-      migrate: (persisted: unknown, version: number) => {
+      version: 2,
+      migrate: (persisted: unknown, _version: number) => {
         const state = persisted as { trips?: Trip[] }
-        if (version < 1 && state.trips) {
-          state.trips = state.trips.map((t) => ({
-            ...t,
-            defaultRates: t.defaultRates ?? {},
-          }))
+        if (state.trips) {
+          state.trips = state.trips.map((t) => {
+            // v0 → v1: add defaultRates as {}
+            // v1 → v2: defaultRates was Record<string,number>, now Record<string,Record<string,number>>
+            const dr = t.defaultRates
+            if (!dr || typeof Object.values(dr)[0] === 'number') {
+              return { ...t, defaultRates: {} }
+            }
+            return t
+          })
         }
         return state
       },

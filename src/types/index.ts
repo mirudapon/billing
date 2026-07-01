@@ -28,7 +28,7 @@ export interface Trip {
   members: Member[]
   expenses: Expense[]
   createdAt: string               // ISO date string
-  defaultRates?: Record<string, number> // currency → default exchange rate
+  defaultRates?: Record<string, Record<string, number>> // paymentMethod → currency → rate
 }
 
 export interface Transfer {

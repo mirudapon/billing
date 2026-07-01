@@ -8,7 +8,7 @@ import SplitEditor from './SplitEditor'
 interface ExpenseFormProps {
   members: Member[]
   existingExpenses: Expense[]
-  defaultRates: Record<string, number>
+  defaultRates?: Record<string, Record<string, number>>
   initialValues?: Expense
   onSubmit: (expense: Omit<Expense, 'id'>) => void
   onCancel: () => void
@@ -52,17 +52,17 @@ export default function ExpenseForm({
     initialValues?.splits ?? defaultSplits(members)
   )
 
-  // Auto-fill exchange rate when currency changes
-  // Priority: defaultRates[currency] → last expense rate → '1' if same as base
+  // Auto-fill exchange rate when currency or paymentMethod changes
+  // Priority: defaultRates[paymentMethod][currency] → last expense rate → '1' if TWD
   useEffect(() => {
     if (initialValues) return
-    const rate = getAutoFillRate(defaultRates, existingExpenses, currency)
+    const rate = getAutoFillRate(defaultRates, existingExpenses, currency, paymentMethod)
     if (rate !== undefined) {
       setExchangeRate(String(rate))
     } else {
       setExchangeRate(currency === 'TWD' ? '1' : '')
     }
-  }, [currency, defaultRates, existingExpenses, initialValues])
+  }, [currency, paymentMethod, defaultRates, existingExpenses, initialValues])
 
   const parsedAmount = parseFloat(amount) || 0
   const parsedRate = parseFloat(exchangeRate) || 0

@@ -1,21 +1,28 @@
 import { useState } from 'react'
 import { Trip, Member } from '../types'
+import { useTripStore } from '../store/useTripStore'
 
 interface TripSettingsPanelProps {
   trip: Trip
   onSave: (updates: Partial<Pick<Trip, 'name' | 'baseCurrency' | 'members' | 'defaultRates'>>) => void
 }
 
+type DefaultRates = Record<string, Record<string, number>>
+
 export default function TripSettingsPanel({ trip, onSave }: TripSettingsPanelProps) {
+  const { settings } = useTripStore()
   const [name, setName] = useState(trip.name)
   const [baseCurrency, setBaseCurrency] = useState(trip.baseCurrency)
   const [members, setMembers] = useState<Member[]>(trip.members)
   const [newMemberName, setNewMemberName] = useState('')
-  const [defaultRates, setDefaultRates] = useState<Record<string, number>>(
+  const [defaultRates, setDefaultRates] = useState<DefaultRates>(
     trip.defaultRates ?? {}
   )
-  const [newRateCurrency, setNewRateCurrency] = useState('')
-  const [newRateValue, setNewRateValue] = useState('')
+
+  // New rate form state
+  const [newPaymentMethod, setNewPaymentMethod] = useState(settings.paymentMethods[0] ?? '')
+  const [newCurrency, setNewCurrency] = useState('')
+  const [newRate, setNewRate] = useState('')
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault()
@@ -33,34 +40,53 @@ export default function TripSettingsPanel({ trip, onSave }: TripSettingsPanelPro
     setMembers(members.filter((m) => m.id !== id))
   }
 
-  function addDefaultRate() {
-    const currency = newRateCurrency.trim().toUpperCase()
-    const rate = parseFloat(newRateValue)
-    if (!currency || isNaN(rate) || rate <= 0) return
-    setDefaultRates({ ...defaultRates, [currency]: rate })
-    setNewRateCurrency('')
-    setNewRateValue('')
+  function addRate() {
+    const currency = newCurrency.trim().toUpperCase()
+    const rate = parseFloat(newRate)
+    if (!currency || !newPaymentMethod || isNaN(rate) || rate <= 0) return
+    setDefaultRates({
+      ...defaultRates,
+      [newPaymentMethod]: {
+        ...(defaultRates[newPaymentMethod] ?? {}),
+        [currency]: rate,
+      },
+    })
+    setNewCurrency('')
+    setNewRate('')
   }
 
-  function removeDefaultRate(currency: string) {
-    const next = { ...defaultRates }
-    delete next[currency]
+  function updateRate(paymentMethod: string, currency: string, value: string) {
+    const rate = parseFloat(value)
+    if (isNaN(rate) || rate <= 0) return
+    setDefaultRates({
+      ...defaultRates,
+      [paymentMethod]: { ...defaultRates[paymentMethod], [currency]: rate },
+    })
+  }
+
+  function removeRate(paymentMethod: string, currency: string) {
+    const next: DefaultRates = { ...defaultRates }
+    const methods = { ...next[paymentMethod] }
+    delete methods[currency]
+    if (Object.keys(methods).length === 0) {
+      delete next[paymentMethod]
+    } else {
+      next[paymentMethod] = methods
+    }
     setDefaultRates(next)
   }
 
-  function updateDefaultRate(currency: string, value: string) {
-    const rate = parseFloat(value)
-    if (!isNaN(rate) && rate > 0) {
-      setDefaultRates({ ...defaultRates, [currency]: rate })
-    }
-  }
+  // Flatten rates for display: [{paymentMethod, currency, rate}]
+  const rateRows = Object.entries(defaultRates).flatMap(([pm, currencies]) =>
+    Object.entries(currencies).map(([currency, rate]) => ({ pm, currency, rate }))
+  )
 
   const inputClass = 'w-full border rounded-lg px-3 py-2 text-sm'
   const labelClass = 'block text-sm font-medium mb-1'
 
   return (
     <form onSubmit={handleSave} className="p-4 space-y-6">
-      {/* 旅行名稱 */}
+      {/* 基本資訊 */}
       <section>
         <h2 className="text-base font-semibold mb-3">基本資訊</h2>
         <div className="space-y-3">
@@ -126,57 +152,97 @@ export default function TripSettingsPanel({ trip, onSave }: TripSettingsPanelPro
         </div>
       </section>
 
-      {/* 預設匯率 */}
+      {/* 預設匯率（依付款方式） */}
       <section>
         <h2 className="text-base font-semibold mb-1">預設匯率</h2>
         <p className="text-xs text-gray-400 mb-3">
-          新增支出時，選擇幣別後自動帶入此匯率（優先於最近一筆）
+          依付款方式設定各幣別預設匯率，新增支出時自動帶入
         </p>
-        <div className="bg-white rounded-xl shadow-sm divide-y mb-3">
-          {Object.keys(defaultRates).length === 0 && (
+
+        {/* 已設定的匯率列表 */}
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-3">
+          {rateRows.length === 0 ? (
             <p className="px-4 py-3 text-sm text-gray-400">尚未設定預設匯率</p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-gray-500 text-xs">
+                <tr>
+                  <th className="text-left px-3 py-2">付款方式</th>
+                  <th className="text-left px-3 py-2">幣別</th>
+                  <th className="text-right px-3 py-2">匯率</th>
+                  <th className="px-3 py-2" />
+                </tr>
+              </thead>
+              <tbody>
+                {rateRows.map(({ pm, currency, rate }) => (
+                  <tr key={`${pm}-${currency}`} className="border-t">
+                    <td className="px-3 py-2 text-gray-600">{pm}</td>
+                    <td className="px-3 py-2 font-medium">{currency}</td>
+                    <td className="px-3 py-2">
+                      <input
+                        type="number"
+                        min={0}
+                        step="any"
+                        value={rate}
+                        onChange={(e) => updateRate(pm, currency, e.target.value)}
+                        className="w-24 border rounded px-2 py-1 text-sm text-right ml-auto block"
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <button
+                        type="button"
+                        onClick={() => removeRate(pm, currency)}
+                        className="text-xs text-red-500"
+                      >
+                        刪除
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
-          {Object.entries(defaultRates).map(([currency, rate]) => (
-            <div key={currency} className="flex items-center gap-3 px-4 py-2">
-              <span className="text-sm font-medium w-12">{currency}</span>
-              <input
-                type="number"
-                min={0}
-                step="any"
-                className="flex-1 border rounded-lg px-3 py-1.5 text-sm"
-                value={rate}
-                onChange={(e) => updateDefaultRate(currency, e.target.value)}
-              />
-              <button
-                type="button"
-                onClick={() => removeDefaultRate(currency)}
-                className="text-xs text-red-500 shrink-0"
-              >
-                刪除
-              </button>
-            </div>
-          ))}
         </div>
-        <div className="flex gap-2">
-          <input
-            className="w-20 border rounded-lg px-3 py-2 text-sm"
-            value={newRateCurrency}
-            onChange={(e) => setNewRateCurrency(e.target.value.toUpperCase())}
-            maxLength={3}
-            placeholder="JPY"
-          />
-          <input
-            type="number"
-            min={0}
-            step="any"
-            className="flex-1 border rounded-lg px-3 py-2 text-sm"
-            value={newRateValue}
-            onChange={(e) => setNewRateValue(e.target.value)}
-            placeholder="匯率，例 0.22"
-          />
+
+        {/* 新增匯率 */}
+        <div className="flex gap-2 items-end">
+          <div className="flex-1">
+            <label className="block text-xs text-gray-500 mb-1">付款方式</label>
+            <select
+              className="w-full border rounded-lg px-3 py-2 text-sm"
+              value={newPaymentMethod}
+              onChange={(e) => setNewPaymentMethod(e.target.value)}
+            >
+              {settings.paymentMethods.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+          </div>
+          <div className="w-20">
+            <label className="block text-xs text-gray-500 mb-1">幣別</label>
+            <input
+              className="w-full border rounded-lg px-3 py-2 text-sm"
+              value={newCurrency}
+              onChange={(e) => setNewCurrency(e.target.value.toUpperCase())}
+              maxLength={3}
+              placeholder="JPY"
+            />
+          </div>
+          <div className="w-24">
+            <label className="block text-xs text-gray-500 mb-1">匯率</label>
+            <input
+              type="number"
+              min={0}
+              step="any"
+              className="w-full border rounded-lg px-3 py-2 text-sm"
+              value={newRate}
+              onChange={(e) => setNewRate(e.target.value)}
+              placeholder="0.22"
+            />
+          </div>
           <button
             type="button"
-            onClick={addDefaultRate}
+            onClick={addRate}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm shrink-0"
           >
             新增

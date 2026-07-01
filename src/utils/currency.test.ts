@@ -64,25 +64,35 @@ describe('getLastExchangeRate', () => {
 })
 
 describe('getAutoFillRate', () => {
-  it('returns defaultRates value when present', () => {
-    const expenses = [makeExpense({ currency: 'JPY', exchangeRate: 0.20 })]
-    expect(getAutoFillRate({ JPY: 0.22 }, expenses, 'JPY')).toBe(0.22)
+  it('returns defaultRates[paymentMethod][currency] when present', () => {
+    const defaultRates = { '現金': { JPY: 0.22 }, '信用卡': { JPY: 0.215 } }
+    expect(getAutoFillRate(defaultRates, [], 'JPY', '現金')).toBe(0.22)
+    expect(getAutoFillRate(defaultRates, [], 'JPY', '信用卡')).toBe(0.215)
   })
 
-  it('falls back to last expense rate when no defaultRate', () => {
+  it('falls back to last expense rate when no defaultRate for that paymentMethod', () => {
     const expenses = [makeExpense({ currency: 'JPY', exchangeRate: 0.20 })]
-    expect(getAutoFillRate({}, expenses, 'JPY')).toBe(0.20)
+    expect(getAutoFillRate({}, expenses, 'JPY', '現金')).toBe(0.20)
   })
 
   it('returns undefined when no defaultRate and no matching expense', () => {
-    expect(getAutoFillRate({}, [], 'JPY')).toBeUndefined()
+    expect(getAutoFillRate(undefined, [], 'JPY', '現金')).toBeUndefined()
   })
 
   it('defaultRate takes priority over last expense rate', () => {
-    const expenses = [
-      makeExpense({ currency: 'JPY', exchangeRate: 0.20 }),
-      makeExpense({ currency: 'JPY', exchangeRate: 0.21 }),
-    ]
-    expect(getAutoFillRate({ JPY: 0.22 }, expenses, 'JPY')).toBe(0.22)
+    const expenses = [makeExpense({ currency: 'JPY', exchangeRate: 0.20 })]
+    const defaultRates = { '現金': { JPY: 0.22 } }
+    expect(getAutoFillRate(defaultRates, expenses, 'JPY', '現金')).toBe(0.22)
+  })
+
+  it('falls back to expense rate when paymentMethod not in defaultRates', () => {
+    const defaultRates = { '信用卡': { JPY: 0.215 } }
+    const expenses = [makeExpense({ currency: 'JPY', exchangeRate: 0.20 })]
+    expect(getAutoFillRate(defaultRates, expenses, 'JPY', '現金')).toBe(0.20)
+  })
+
+  it('handles undefined defaultRates gracefully', () => {
+    const expenses = [makeExpense({ currency: 'JPY', exchangeRate: 0.20 })]
+    expect(getAutoFillRate(undefined, expenses, 'JPY', '現金')).toBe(0.20)
   })
 })

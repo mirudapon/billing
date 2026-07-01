@@ -14,14 +14,16 @@ export function getLastExchangeRate(
 }
 
 /**
- * Returns the best auto-fill rate for a currency when adding a new expense.
- * Priority: defaultRates[currency] → last expense rate → undefined
+ * Returns the best auto-fill rate for a currency + paymentMethod when adding a new expense.
+ * Priority: defaultRates[paymentMethod][currency] → last expense rate → undefined
  */
 export function getAutoFillRate(
-  defaultRates: Record<string, number>,
+  defaultRates: Record<string, Record<string, number>> | undefined,
   expenses: Expense[],
-  currency: string
+  currency: string,
+  paymentMethod: string
 ): number | undefined {
-  if (defaultRates[currency] !== undefined) return defaultRates[currency]
+  const rate = defaultRates?.[paymentMethod]?.[currency]
+  if (rate !== undefined) return rate
   return getLastExchangeRate(expenses, currency)
 }
