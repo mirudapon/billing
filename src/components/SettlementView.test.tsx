@@ -75,7 +75,7 @@ describe('SettlementView', () => {
       ],
     })
     render(<SettlementView trip={trip} />)
-    expect(screen.getByText('200.00')).toBeInTheDocument()
-    expect(screen.getAllByText('100.00').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('200')).toBeInTheDocument()
+    expect(screen.getAllByText('100').length).toBeGreaterThanOrEqual(1)
   })
 })

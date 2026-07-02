@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { Trip } from '../types'
 import { calculateSettlement } from '../utils/settlement'
+import MemberStatsPanel from './MemberStatsPanel'
 
 interface SettlementViewProps {
   trip: Trip
@@ -7,23 +9,7 @@ interface SettlementViewProps {
 
 export default function SettlementView({ trip }: SettlementViewProps) {
   const transfers = calculateSettlement(trip)
-
-  // Per-member summary
-  const summary = trip.members.map((member) => {
-    const paid = trip.expenses
-      .filter((e) => e.paidBy === member.id)
-      .reduce((sum, e) => sum + e.amount * e.exchangeRate, 0)
-
-    const owed = trip.expenses.reduce((sum, e) => {
-      const baseAmount = e.amount * e.exchangeRate
-      const ratioSum = e.splits.reduce((s, sp) => s + sp.ratio, 0)
-      const split = e.splits.find((s) => s.memberId === member.id)
-      if (!split || ratioSum === 0) return sum
-      return sum + baseAmount * (split.ratio / ratioSum)
-    }, 0)
-
-    return { member, paid, owed, net: paid - owed }
-  })
+  const [selectedMemberId, setSelectedMemberId] = useState(trip.members[0]?.id ?? '')
 
   function getMemberName(memberId: string): string {
     return trip.members.find((m) => m.id === memberId)?.name ?? memberId
@@ -31,38 +17,34 @@ export default function SettlementView({ trip }: SettlementViewProps) {
 
   return (
     <div className="p-4 space-y-6">
-      {/* Per-member summary table */}
-      <section>
-        <h2 className="text-base font-semibold mb-3">各人總覽</h2>
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-500 text-xs">
-              <tr>
-                <th className="text-left px-3 py-2">成員</th>
-                <th className="text-right px-3 py-2">已付</th>
-                <th className="text-right px-3 py-2">應付</th>
-                <th className="text-right px-3 py-2">差額</th>
-              </tr>
-            </thead>
-            <tbody>
-              {summary.map(({ member, paid, owed, net }) => (
-                <tr key={member.id} className="border-t">
-                  <td className="px-3 py-2 font-medium">{member.name}</td>
-                  <td className="px-3 py-2 text-right">{paid.toFixed(2)}</td>
-                  <td className="px-3 py-2 text-right">{owed.toFixed(2)}</td>
-                  <td
-                    className={`px-3 py-2 text-right font-semibold ${
-                      net >= 0 ? 'text-green-600' : 'text-red-500'
-                    }`}
-                  >
-                    {net >= 0 ? '+' : ''}{net.toFixed(2)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      {/* Per-member stats with tab selector */}
+      {trip.members.length > 0 && (
+        <section>
+          <h2 className="text-base font-semibold mb-3">個人統計</h2>
+
+          {/* Member pill tabs */}
+          <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
+            {trip.members.map((member) => (
+              <button
+                key={member.id}
+                type="button"
+                onClick={() => setSelectedMemberId(member.id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors shrink-0 ${
+                  selectedMemberId === member.id
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                {member.name}
+              </button>
+            ))}
+          </div>
+
+          {selectedMemberId && (
+            <MemberStatsPanel trip={trip} memberId={selectedMemberId} />
+          )}
+        </section>
+      )}
 
       {/* Minimum transfers */}
       <section>
