@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Expense, Member } from '../types'
 import { convertToBase } from '../utils/currency'
 
@@ -25,6 +26,22 @@ export default function ExpenseList({
   onDelete,
   onEdit,
 }: ExpenseListProps) {
+  const [filterCategory, setFilterCategory] = useState<string>('')
+  const [filterMemberId, setFilterMemberId] = useState<string>('')
+
+  const categories = [...new Set(expenses.map((e) => e.category))]
+
+  const filtered = expenses.filter((e) => {
+    if (filterCategory && e.category !== filterCategory) return false
+    if (filterMemberId) {
+      const involved =
+        e.paidBy === filterMemberId ||
+        e.splits.some((s) => s.memberId === filterMemberId)
+      if (!involved) return false
+    }
+    return true
+  })
+
   if (expenses.length === 0) {
     return (
       <p className="text-center text-gray-400 mt-16">尚無支出記錄，切換至「新增」頁面</p>
@@ -33,7 +50,7 @@ export default function ExpenseList({
 
   // Group by date
   const grouped: Record<string, Expense[]> = {}
-  const sorted = [...expenses].sort((a, b) => b.date.localeCompare(a.date))
+  const sorted = [...filtered].sort((a, b) => b.date.localeCompare(a.date))
   for (const expense of sorted) {
     if (!grouped[expense.date]) grouped[expense.date] = []
     grouped[expense.date].push(expense)
@@ -43,8 +60,52 @@ export default function ExpenseList({
     return members.find((m) => m.id === memberId)?.name ?? memberId
   }
 
+  const pillClass = (active: boolean) =>
+    `px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap shrink-0 transition-colors ${
+      active ? 'bg-blue-600 text-white' : 'bg-white border text-gray-600'
+    }`
+
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4">
+      {/* Filter bar */}
+      <div className="bg-white border-b px-4 py-3 space-y-2">
+        {/* Category filter */}
+        {categories.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            <button className={pillClass(filterCategory === '')} onClick={() => setFilterCategory('')}>全部類別</button>
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                className={pillClass(filterCategory === cat)}
+                onClick={() => setFilterCategory(filterCategory === cat ? '' : cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
+        {/* Member filter */}
+        {members.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            <button className={pillClass(filterMemberId === '')} onClick={() => setFilterMemberId('')}>全部成員</button>
+            {members.map((m) => (
+              <button
+                key={m.id}
+                className={pillClass(filterMemberId === m.id)}
+                onClick={() => setFilterMemberId(filterMemberId === m.id ? '' : m.id)}
+              >
+                {m.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* List */}
+      <div className="space-y-4 px-4">
+      {filtered.length === 0 && (
+        <p className="text-center text-gray-400 py-8 text-sm">無符合條件的支出</p>
+      )}
       {Object.entries(grouped).sort(([a], [b]) => b.localeCompare(a)).map(([date, dayExpenses]) => (
         <section key={date}>
           <h3 className="text-sm font-semibold text-gray-500 mb-2">{date}</h3>
@@ -92,6 +153,7 @@ export default function ExpenseList({
           </div>
         </section>
       ))}
+      </div>
     </div>
   )
 }

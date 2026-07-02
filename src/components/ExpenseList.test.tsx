@@ -77,8 +77,8 @@ describe('ExpenseList', () => {
         onEdit={vi.fn()}
       />
     )
-    expect(screen.getByText(/Alice/)).toBeInTheDocument()
-    expect(screen.getByText(/Bob/)).toBeInTheDocument()
+    expect(screen.getAllByText(/Alice/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Bob/).length).toBeGreaterThan(0)
   })
 
   it('calls onDelete when delete button clicked', () => {
