@@ -33,7 +33,7 @@ export default function ExpenseList({
 
   // Group by date
   const grouped: Record<string, Expense[]> = {}
-  const sorted = [...expenses].sort((a, b) => a.date.localeCompare(b.date))
+  const sorted = [...expenses].sort((a, b) => b.date.localeCompare(a.date))
   for (const expense of sorted) {
     if (!grouped[expense.date]) grouped[expense.date] = []
     grouped[expense.date].push(expense)
@@ -45,7 +45,7 @@ export default function ExpenseList({
 
   return (
     <div className="space-y-4 p-4">
-      {Object.entries(grouped).map(([date, dayExpenses]) => (
+      {Object.entries(grouped).sort(([a], [b]) => b.localeCompare(a)).map(([date, dayExpenses]) => (
         <section key={date}>
           <h3 className="text-sm font-semibold text-gray-500 mb-2">{date}</h3>
           <div className="space-y-2">

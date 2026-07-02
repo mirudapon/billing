@@ -94,7 +94,7 @@ describe('ExpenseList', () => {
     )
     const deleteButtons = screen.getAllByRole('button', { name: /刪除/ })
     fireEvent.click(deleteButtons[0])
-    expect(onDelete).toHaveBeenCalledWith('e1')
+    expect(onDelete).toHaveBeenCalledWith('e2')
   })
 
   it('calls onEdit when edit button clicked', () => {
@@ -110,7 +110,7 @@ describe('ExpenseList', () => {
     )
     const editButtons = screen.getAllByRole('button', { name: /編輯/ })
     fireEvent.click(editButtons[0])
-    expect(onEdit).toHaveBeenCalledWith(expenses[0])
+    expect(onEdit).toHaveBeenCalledWith(expenses[1])
   })
 
   it('shows empty state when no expenses', () => {
