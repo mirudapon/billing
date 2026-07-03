@@ -88,7 +88,7 @@ export default function ExpenseForm({
   }
 
   const labelClass = 'block text-sm font-medium mb-1'
-  const inputClass = 'w-full border rounded-lg px-3 py-2 text-sm'
+  const inputClass = 'w-full border rounded-lg px-3 py-2 text-base'
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 p-4">

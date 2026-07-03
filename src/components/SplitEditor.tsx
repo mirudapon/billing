@@ -91,7 +91,7 @@ export default function SplitEditor({
                   min={1}
                   value={split!.ratio}
                   onChange={(e) => handleRatio(member.id, parseFloat(e.target.value))}
-                  className="w-12 border rounded-lg px-1 py-1 text-sm text-center"
+                  className="w-12 border rounded-lg px-1 py-1 text-base text-center"
                 />
                 <button
                   type="button"

@@ -81,7 +81,7 @@ export default function TripSettingsPanel({ trip, onSave }: TripSettingsPanelPro
     Object.entries(currencies).map(([currency, rate]) => ({ pm, currency, rate }))
   )
 
-  const inputClass = 'w-full border rounded-lg px-3 py-2 text-sm'
+  const inputClass = 'w-full border rounded-lg px-3 py-2 text-base'
   const labelClass = 'block text-sm font-medium mb-1'
 
   return (
@@ -136,7 +136,7 @@ export default function TripSettingsPanel({ trip, onSave }: TripSettingsPanelPro
         </div>
         <div className="flex gap-2">
           <input
-            className="flex-1 border rounded-lg px-3 py-2 text-sm"
+            className="flex-1 border rounded-lg px-3 py-2 text-base"
             value={newMemberName}
             onChange={(e) => setNewMemberName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addMember())}
@@ -185,7 +185,7 @@ export default function TripSettingsPanel({ trip, onSave }: TripSettingsPanelPro
                         step="any"
                         value={rate}
                         onChange={(e) => updateRate(pm, currency, e.target.value)}
-                        className="w-24 border rounded px-2 py-1 text-sm text-right ml-auto block"
+                        className="w-24 border rounded px-2 py-1 text-base text-right ml-auto block"
                       />
                     </td>
                     <td className="px-3 py-2">
@@ -209,7 +209,7 @@ export default function TripSettingsPanel({ trip, onSave }: TripSettingsPanelPro
           <div className="flex-1">
             <label className="block text-xs text-gray-500 mb-1">付款方式</label>
             <select
-              className="w-full border rounded-lg px-3 py-2 text-sm"
+              className="w-full border rounded-lg px-3 py-2 text-base"
               value={newPaymentMethod}
               onChange={(e) => setNewPaymentMethod(e.target.value)}
             >
@@ -221,7 +221,7 @@ export default function TripSettingsPanel({ trip, onSave }: TripSettingsPanelPro
           <div className="w-20">
             <label className="block text-xs text-gray-500 mb-1">幣別</label>
             <input
-              className="w-full border rounded-lg px-3 py-2 text-sm"
+              className="w-full border rounded-lg px-3 py-2 text-base"
               value={newCurrency}
               onChange={(e) => setNewCurrency(e.target.value.toUpperCase())}
               maxLength={3}
@@ -234,7 +234,7 @@ export default function TripSettingsPanel({ trip, onSave }: TripSettingsPanelPro
               type="number"
               min={0}
               step="any"
-              className="w-full border rounded-lg px-3 py-2 text-sm"
+              className="w-full border rounded-lg px-3 py-2 text-base"
               value={newRate}
               onChange={(e) => setNewRate(e.target.value)}
               placeholder="0.22"
