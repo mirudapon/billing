@@ -4,10 +4,11 @@ import { useTripStore } from '../store/useTripStore'
 import ExpenseList from '../components/ExpenseList'
 import ExpenseForm from '../components/ExpenseForm'
 import SettlementView from '../components/SettlementView'
+import TransferView from '../components/TransferView'
 import TripSettingsPanel from '../components/TripSettingsPanel'
 import { Expense, Trip } from '../types'
 
-type Tab = 'list' | 'add' | 'settlement' | 'settings'
+type Tab = 'list' | 'add' | 'settlement' | 'transfer' | 'settings'
 
 export default function TripDetailPage() {
   const { tripId } = useParams<{ tripId: string }>()
@@ -63,6 +64,7 @@ export default function TripDetailPage() {
     { key: 'list', label: '支出列表' },
     { key: 'add', label: editingExpense ? '編輯支出' : '新增支出' },
     { key: 'settlement', label: '結算' },
+    { key: 'transfer', label: '轉帳' },
     { key: 'settings', label: '旅行設定' },
   ]
 
@@ -126,6 +128,7 @@ export default function TripDetailPage() {
           />
         )}
         {activeTab === 'settlement' && <SettlementView trip={trip} />}
+        {activeTab === 'transfer' && <TransferView trip={trip} />}
         {activeTab === 'settings' && (
           <TripSettingsPanel trip={trip} onSave={handleSaveSettings} />
         )}

@@ -30,6 +30,7 @@ export interface Trip {
   createdAt: string               // ISO date string
   currencies?: string[]                                  // e.g. ["JPY", "USD"]
   defaultRates?: Record<string, Record<string, number>> // paymentMethod → currency → rate
+  transferConfirmations?: Record<string, number>         // `${from}-${to}` → confirmed amount
 }
 
 export interface Transfer {

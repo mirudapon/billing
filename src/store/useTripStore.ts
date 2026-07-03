@@ -17,6 +17,7 @@ interface TripStore {
   addExpense: (tripId: string, expense: Omit<Expense, 'id'>) => void
   updateExpense: (tripId: string, expense: Expense) => void
   deleteExpense: (tripId: string, expenseId: string) => void
+  confirmTransfer: (tripId: string, key: string, amount: number) => void
   addCategory: (category: string) => void
   removeCategory: (category: string) => void
   addPaymentMethod: (method: string) => void
@@ -94,6 +95,21 @@ export const useTripStore = create<TripStore>()(
               ? {
                   ...trip,
                   expenses: trip.expenses.filter((e) => e.id !== expenseId),
+                }
+              : trip
+          ),
+        })),
+
+      confirmTransfer: (tripId, key, amount) =>
+        set((state) => ({
+          trips: state.trips.map((trip) =>
+            trip.id === tripId
+              ? {
+                  ...trip,
+                  transferConfirmations: {
+                    ...(trip.transferConfirmations ?? {}),
+                    [key]: amount,
+                  },
                 }
               : trip
           ),
