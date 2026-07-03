@@ -9,6 +9,8 @@ interface ExpenseFormProps {
   members: Member[]
   existingExpenses: Expense[]
   defaultRates?: Record<string, Record<string, number>>
+  currencies?: string[]
+  baseCurrency?: string
   initialValues?: Expense
   onSubmit: (expense: Omit<Expense, 'id'>) => void
   onCancel: () => void
@@ -22,6 +24,8 @@ export default function ExpenseForm({
   members,
   existingExpenses,
   defaultRates,
+  currencies,
+  baseCurrency,
   initialValues,
   onSubmit,
   onCancel,
@@ -168,13 +172,26 @@ export default function ExpenseForm({
       <div className="grid grid-cols-3 gap-2">
         <div className="col-span-1">
           <label className={labelClass}>幣別</label>
-          <input
-            className={inputClass}
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value.toUpperCase())}
-            maxLength={3}
-            placeholder="JPY"
-          />
+          {currencies && currencies.length > 0 ? (
+            <select
+              className={inputClass}
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+            >
+              {baseCurrency && <option value={baseCurrency}>{baseCurrency}</option>}
+              {currencies.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          ) : (
+            <input
+              className={inputClass}
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value.toUpperCase())}
+              maxLength={3}
+              placeholder="JPY"
+            />
+          )}
         </div>
         <div className="col-span-1">
           <label className={labelClass}>金額</label>

@@ -28,6 +28,7 @@ export interface Trip {
   members: Member[]
   expenses: Expense[]
   createdAt: string               // ISO date string
+  currencies?: string[]                                  // e.g. ["JPY", "USD"]
   defaultRates?: Record<string, Record<string, number>> // paymentMethod → currency → rate
 }
 

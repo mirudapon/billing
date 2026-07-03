@@ -4,7 +4,7 @@ import { useTripStore } from '../store/useTripStore'
 
 interface TripSettingsPanelProps {
   trip: Trip
-  onSave: (updates: Partial<Pick<Trip, 'name' | 'baseCurrency' | 'members' | 'defaultRates'>>) => void
+  onSave: (updates: Partial<Pick<Trip, 'name' | 'baseCurrency' | 'members' | 'currencies' | 'defaultRates'>>) => void
 }
 
 type DefaultRates = Record<string, Record<string, number>>
@@ -18,6 +18,8 @@ export default function TripSettingsPanel({ trip, onSave }: TripSettingsPanelPro
   const [defaultRates, setDefaultRates] = useState<DefaultRates>(
     trip.defaultRates ?? {}
   )
+  const [currencies, setCurrencies] = useState<string[]>(trip.currencies ?? [])
+  const [newCurrencyInput, setNewCurrencyInput] = useState('')
 
   // New rate form state
   const [newPaymentMethod, setNewPaymentMethod] = useState(settings.paymentMethods[0] ?? '')
@@ -26,7 +28,7 @@ export default function TripSettingsPanel({ trip, onSave }: TripSettingsPanelPro
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    onSave({ name, baseCurrency, members, defaultRates })
+    onSave({ name, baseCurrency, members, currencies, defaultRates })
   }
 
   function addMember() {
@@ -38,6 +40,17 @@ export default function TripSettingsPanel({ trip, onSave }: TripSettingsPanelPro
 
   function removeMember(id: string) {
     setMembers(members.filter((m) => m.id !== id))
+  }
+
+  function addCurrency() {
+    const code = newCurrencyInput.trim().toUpperCase()
+    if (!code || currencies.includes(code) || code === baseCurrency) return
+    setCurrencies([...currencies, code])
+    setNewCurrencyInput('')
+  }
+
+  function removeCurrency(code: string) {
+    setCurrencies(currencies.filter((c) => c !== code))
   }
 
   function addRate() {
@@ -145,6 +158,50 @@ export default function TripSettingsPanel({ trip, onSave }: TripSettingsPanelPro
           <button
             type="button"
             onClick={addMember}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
+          >
+            新增
+          </button>
+        </div>
+      </section>
+
+      {/* 幣別管理 */}
+      <section>
+        <h2 className="text-base font-semibold mb-1">幣別管理</h2>
+        <p className="text-xs text-gray-400 mb-3">新增支出時可從下拉選單選擇幣別</p>
+        <div className="bg-white rounded-xl shadow-sm divide-y mb-3">
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="text-sm font-medium">{baseCurrency || trip.baseCurrency}</span>
+            <span className="text-xs text-gray-400">本位幣</span>
+          </div>
+          {currencies.map((code) => (
+            <div key={code} className="flex items-center justify-between px-4 py-3">
+              <span className="text-sm">{code}</span>
+              <button
+                type="button"
+                onClick={() => removeCurrency(code)}
+                className="text-xs text-red-500"
+              >
+                移除
+              </button>
+            </div>
+          ))}
+          {currencies.length === 0 && (
+            <p className="px-4 py-3 text-sm text-gray-400">尚未新增外幣</p>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <input
+            className="flex-1 border rounded-lg px-3 py-2 text-base"
+            value={newCurrencyInput}
+            onChange={(e) => setNewCurrencyInput(e.target.value.toUpperCase())}
+            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCurrency())}
+            maxLength={3}
+            placeholder="JPY"
+          />
+          <button
+            type="button"
+            onClick={addCurrency}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
           >
             新增

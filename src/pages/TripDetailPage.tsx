@@ -54,7 +54,7 @@ export default function TripDetailPage() {
     setActiveTab('list')
   }
 
-  function handleSaveSettings(updates: Partial<Pick<Trip, 'name' | 'baseCurrency' | 'members' | 'defaultRates'>>) {
+  function handleSaveSettings(updates: Partial<Pick<Trip, 'name' | 'baseCurrency' | 'members' | 'currencies' | 'defaultRates'>>) {
     updateTrip(trip!.id, updates)
     setActiveTab('list')
   }
@@ -118,6 +118,8 @@ export default function TripDetailPage() {
             members={trip.members}
             existingExpenses={trip.expenses}
             defaultRates={trip.defaultRates ?? {}}
+            currencies={trip.currencies ?? []}
+            baseCurrency={trip.baseCurrency}
             initialValues={editingExpense}
             onSubmit={editingExpense ? handleUpdateExpense : handleAddExpense}
             onCancel={handleCancelForm}

@@ -12,7 +12,7 @@ interface TripStore {
   trips: Trip[]
   settings: AppSettings
   addTrip: (trip: Omit<Trip, 'id' | 'createdAt' | 'expenses'>) => void
-  updateTrip: (tripId: string, updates: Partial<Pick<Trip, 'name' | 'baseCurrency' | 'members' | 'defaultRates'>>) => void
+  updateTrip: (tripId: string, updates: Partial<Pick<Trip, 'name' | 'baseCurrency' | 'members' | 'currencies' | 'defaultRates'>>) => void
   deleteTrip: (tripId: string) => void
   addExpense: (tripId: string, expense: Omit<Expense, 'id'>) => void
   updateExpense: (tripId: string, expense: Expense) => void
