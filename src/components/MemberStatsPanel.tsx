@@ -1,4 +1,4 @@
-import { Trip } from '../types'
+import { Expense, Trip } from '../types'
 
 const CATEGORY_COLORS: Record<string, string> = {
   餐飲: '#f97316',
@@ -141,6 +141,19 @@ export default function MemberStatsPanel({ trip, memberId }: MemberStatsPanelPro
     .sort(([, a], [, b]) => b - a)
     .map(([label, value], i) => ({ label, value, color: PAYMENT_PALETTE[i % PAYMENT_PALETTE.length] }))
 
+  // Expenses this member is involved in (paid or in splits), newest first
+  const relatedExpenses: (Expense & { share: number; isPayer: boolean })[] = trip.expenses
+    .filter((e) => e.paidBy === memberId || e.splits.some((s) => s.memberId === memberId))
+    .map((e) => {
+      const split = e.splits.find((s) => s.memberId === memberId)
+      const ratioSum = e.splits.reduce((s, sp) => s + sp.ratio, 0)
+      const share = split && ratioSum > 0
+        ? e.amount * e.exchangeRate * (split.ratio / ratioSum)
+        : 0
+      return { ...e, share, isPayer: e.paidBy === memberId }
+    })
+    .sort((a, b) => b.date.localeCompare(a.date))
+
   return (
     <div className="space-y-4">
       {/* Stat cards */}
@@ -167,6 +180,27 @@ export default function MemberStatsPanel({ trip, memberId }: MemberStatsPanelPro
         <>
           <DonutSection title="消費分類" entries={categoryEntries} currency={trip.baseCurrency} />
           <DonutSection title="付款方式" entries={paymentEntries} currency={trip.baseCurrency} />
+
+          {/* Related expense list */}
+          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <h3 className="text-sm font-semibold px-4 pt-4 pb-2">相關支出</h3>
+            {relatedExpenses.map((e) => (
+              <div key={e.id} className="flex items-center gap-3 px-4 py-3 border-t">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{e.description}</p>
+                  <p className="text-xs text-gray-400">{e.date} · {e.category} · {e.paymentMethod}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-semibold">
+                    {e.currency} {e.amount.toLocaleString()}
+                  </p>
+                  <p className={`text-xs ${e.isPayer ? 'text-blue-500' : 'text-gray-400'}`}>
+                    {e.isPayer ? `付款 ${(e.amount * e.exchangeRate).toFixed(0)}` : `分攤 ${e.share.toFixed(0)}`}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </>
       )}
     </div>
